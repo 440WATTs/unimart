@@ -14,7 +14,8 @@
     "landing": "python3 scripts/build-landing.py",
     "typecheck": "tsc --noEmit",
     "test:unit": "node --import tsx --test tests/unit/*.test.ts",
-    "test": "npm run test:unit && npm run test:db"
+    "test": "npm run test:unit && npm run test:db && npm run test:functions",
+    "test:functions": "node --import tsx --test tests/functions/*.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

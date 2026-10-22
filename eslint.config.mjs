@@ -18,6 +18,9 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Deno entry points for Supabase Edge Functions (npm: specifiers, Deno globals).
+      "supabase/functions/**/index.ts",
+      "supabase/functions/_shared/deps.ts",
     ],
   },
 ];
