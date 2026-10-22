@@ -64,6 +64,42 @@ reverse proxy **must overwrite** that header with the real client address (nginx
 2. Apply migrations to production (`supabase db push`) **before** the app deploy when they are additive.
 3. Deploy the app (Vercel promotes the build; other hosts: `npm ci && npm run build && npm start` behind HTTPS).
 
+## Edge Functions (native clients)
+
+Native apps (the UniKart iOS app) can't call Next.js server actions, so the three flows that need server secrets
+also exist as Supabase Edge Functions in `supabase/functions`. They call the same SQL functions, use the same code
+hash (`HMAC-SHA256(VERIFICATION_CODE_SECRET, "<userId>:<code>")`) and the same rate limits as the web actions, so a
+code requested on one client verifies on the other.
+
+| Function | Mirrors | Caller |
+| --- | --- | --- |
+| `institute-verification` | `requestInstituteCode` / `confirmInstituteCode` | signed-in user (JWT validated with `auth.getUser`) |
+| `delete-account` | `deleteAccount` | signed-in user; refuses admins |
+| `contact` | `sendContactMessage` | anyone; honeypot, per-IP and global limits |
+
+Logic is in `_shared/handlers.ts` (runtime-agnostic, covered by `npm run test:functions` against the real
+migrations); `_shared/deps.ts` and each `index.ts` are the Deno wiring and are excluded from `tsc`/ESLint.
+
+Deploy (staging first):
+
+```bash
+supabase secrets set VERIFICATION_CODE_SECRET=<same value as the web app> RESEND_API_KEY=<key> \
+  EMAIL_FROM="UniMart <verify@your-domain>" APP_NAME=UniMart
+supabase functions deploy institute-verification delete-account
+supabase functions deploy contact --no-verify-jwt
+```
+
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided by Supabase. Never set `UNIKART_ALLOW_DEV_EMAIL_LOG` in
+staging or production: it writes verification codes to the function logs (local `supabase functions serve` only).
+For the iOS app also add `unikart://auth/callback**` to Auth → URL Configuration → Redirect URLs.
+
+Per-IP limits in the functions key on `x-forwarded-for` as set by the Supabase gateway; per-user limits in the
+database apply regardless. Rollback: redeploy the previous git revision of the function.
+
+Orphaned uploads: photos uploaded from a form that was never saved (app killed mid-form) can stay in
+`listing-images/<user>/<listing>/`. A scheduled clean-up (delete objects older than 24 h that no `listing_images`
+row references) is recommended but not implemented, because it deletes data.
+
 ## Post-deployment smoke test (5 minutes)
 
 ```bash

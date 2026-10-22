@@ -20,7 +20,7 @@ Next.js 15 + Supabase (Postgres with row-level security, Auth with Google, Stora
 | Script | What it does |
 | --- | --- |
 | `npm run dev` / `build` / `start` | Next.js |
-| `npm test` | Unit tests + database authorization tests (embedded Postgres, no Docker needed) |
+| `npm test` | Unit tests + database authorization tests + Edge Function tests (embedded Postgres, no Docker needed) |
 | `npm run typecheck`, `npm run lint` | Static checks |
 | `npm run seed`, `npm run seed:reset` | Development demo data (needs `ALLOW_DEMO_SEED=true`) |
 | `npm run make-admin -- <email>` | Grant the first admin role |

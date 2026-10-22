@@ -1,0 +1,18 @@
+# Supabase CLI configuration. Only settings that differ from the CLI defaults
+# are listed; `supabase init` fills in the rest locally.
+project_id = "unimart"
+
+# Edge Functions used by native clients (docs/DEPLOYMENT.md, "Edge Functions").
+# The handlers validate the caller's JWT themselves with auth.getUser(); the
+# gateway check is additionally kept on for the two functions that need a user.
+[functions.institute-verification]
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true
+
+# Visitors may use the contact form without an account. With publishable
+# (non-JWT) API keys the gateway can't verify a JWT, so the function does its
+# own optional user lookup and per-IP rate limiting.
+[functions.contact]
+verify_jwt = false
